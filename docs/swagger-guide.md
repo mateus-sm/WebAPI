@@ -41,8 +41,15 @@ builder.Services.AddOpenApi(options =>
 Mapeia o endpoint JSON do OpenAPI e a interface visual do Scalar:
 
 ```csharp
-app.MapOpenApi();                      // endpoint do JSON OpenAPI
-app.MapScalarApiReference("/doc");     // interface visual do Scalar
+// endpoint do JSON OpenAPI
+app.MapOpenApi();
+
+// interface visual do Scalar
+app.MapScalarApiReference("/doc", options => 
+{
+    // Design e Layout
+    options.WithTheme(ScalarTheme.Laserwave).WithClassicLayout();
+});
 ```
 
 ---

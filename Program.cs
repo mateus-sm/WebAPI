@@ -40,7 +40,11 @@ namespace WebAPI
             app.MapOpenApi();
 
             // interface visual do Scalar
-            app.MapScalarApiReference("/doc");
+            app.MapScalarApiReference("/doc", options =>
+            {
+                // Design e Layout
+                options.WithTheme(ScalarTheme.Laserwave).WithClassicLayout();
+            });
 
 
             // Configure the HTTP request pipeline.
