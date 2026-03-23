@@ -61,5 +61,15 @@
         {
             return _repository.AlunoExistente(id);
         }
+
+        public bool saveFoto(int id, byte[] foto)
+        {
+            return _repository.SalvarFoto(id, foto);
+        }
+
+        public byte[]? getFoto(int id)
+        {
+            return _repository.BuscarFoto(id);
+        }
     }
 }

@@ -41,6 +41,7 @@ namespace WebAPI
             // IOC
             builder.Services.AddScoped<Repository.MySqlDbContext>();
             builder.Services.AddScoped<Repository.CidadeRepository>();
+            builder.Services.AddScoped<Repository.AlunoRepository>();
             builder.Services.AddScoped<Service.CidadeService>();
 
             var app = builder.Build();

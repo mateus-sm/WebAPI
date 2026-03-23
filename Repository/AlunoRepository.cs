@@ -12,6 +12,56 @@ namespace WebAPI.Repository
             _context = context;
         }
 
+        public bool SalvarFoto(int id, byte[] foto)
+        {
+            bool sucesso = false;
+            MySql.Data.MySqlClient.MySqlTransaction? transacao = null;
+
+            try
+            {
+                using (var cmd = _context.GetConexao().CreateCommand())
+                {
+                    transacao = _context.GetConexao().BeginTransaction();
+                    cmd.Transaction = transacao;
+
+                    cmd.CommandText = "UPDATE Aluno SET Foto = @Foto WHERE AlunoId = @AlunoId";
+                    cmd.Parameters.AddWithValue("@Foto", foto);
+                    cmd.Parameters.AddWithValue("@AlunoId", id);
+
+                    cmd.ExecuteNonQuery();
+                    transacao.Commit();
+                    sucesso = true;
+                }
+            }
+            catch (MySqlException)
+            {
+                transacao?.Rollback();
+                throw;
+            }
+
+            return sucesso;
+        }
+
+        public byte[]? BuscarFoto(int id)
+        {
+            using (var cmd = _context.GetConexao().CreateCommand())
+            {
+                cmd.CommandText = "SELECT Foto FROM Aluno WHERE AlunoId = @AlunoId";
+                cmd.Parameters.AddWithValue("@AlunoId", id);
+
+                var dr = cmd.ExecuteReader();
+
+                if (dr.Read() && !dr.IsDBNull(dr.GetOrdinal("Foto")))
+                {
+                    var foto = (byte[])dr["Foto"];
+                    dr.Close();
+                    return foto;
+                }
+
+                dr.Close();
+                return null;
+            }
+        }
 
         public bool Criar(Entidades.Aluno aluno)
         {
