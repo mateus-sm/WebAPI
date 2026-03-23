@@ -43,6 +43,7 @@ namespace WebAPI
             builder.Services.AddScoped<Repository.CidadeRepository>();
             builder.Services.AddScoped<Repository.AlunoRepository>();
             builder.Services.AddScoped<Service.CidadeService>();
+            builder.Services.AddScoped<Service.AlunoService>();
 
             var app = builder.Build();
 
