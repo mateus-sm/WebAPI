@@ -34,6 +34,13 @@ namespace WebAPI
                 });
             });
 
+
+            var stringConexao = builder.Configuration["StringConexao"];
+            Environment.SetEnvironmentVariable("StringConexao", stringConexao);
+
+            // IOC
+            builder.Services.AddScoped<Repository.MySqlDbContext>();
+
             var app = builder.Build();
 
             // endpoint do json OpenAPI
