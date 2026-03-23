@@ -320,6 +320,11 @@ namespace WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Alterar cidade existente no banco.
+        /// </summary>
+        /// <param name="cidade"></param>
+        /// <returns>Flag de cofnirmação</returns>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -345,6 +350,11 @@ namespace WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletar cidade existente no banco.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Flag de confirmação</returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
