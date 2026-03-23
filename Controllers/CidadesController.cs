@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
+using WebAPI.Entidades;
 
 namespace WebAPI.Controllers
 {
@@ -310,6 +311,56 @@ namespace WebAPI.Controllers
                 return StatusCode(500, new
                 {
                     Erro = "Falha ao gravar os dados no banco.",
+                    Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
+            }
+        }
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult AlterarCidade(Entidades.Cidade cidade)
+        {
+            try
+            {
+                bool flag = _cidService.atualizarCidade(cidade);
+                return Ok("Alterado com sucesso.");
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao alterar os dados no banco.",
+                    Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult DeletarCidade(int id)
+        {
+            try
+            {
+                bool flag = _cidService.deletarCidade(id);
+                return Ok("Deletado com sucesso.");
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao alterar os dados no banco.",
                     Detalhe = ex.Message
                 });
             }

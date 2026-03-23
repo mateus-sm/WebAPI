@@ -76,5 +76,15 @@ namespace WebAPI.Service
         {
             return _cidRepository.ReadByEstado(sigla);
         }
+
+        public bool atualizarCidade(Entidades.Cidade cidade)
+        {
+            return _cidRepository.Update(cidade);
+        }
+
+        public bool deletarCidade(int id)
+        {
+            return _cidRepository.Delete(id);
+        }
     }
 }

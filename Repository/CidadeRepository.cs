@@ -163,6 +163,58 @@ namespace WebAPI.Repository
             return cid;
         }
 
+        public bool Update(Entidades.Cidade cidade)
+        {
+            bool flag = false;
+
+            try
+            {
+                using (var cmd = _conexao.GetConexao().CreateCommand())
+                {
+                    cmd.CommandText = @"UPDATE aluno20.Cidades 
+                                        SET Nome = @Nome, Sigla = @Sigla, IBGEMunicipio = @IBGEMunicipio, Latitude = @Latitude, Longitude = @Longitude
+                                        WHERE CidadeId = @id;";
+
+                    cmd.Parameters.AddWithValue("@Nome", cidade.Nome);
+                    cmd.Parameters.AddWithValue("@Sigla", cidade.Sigla);
+                    cmd.Parameters.AddWithValue("@IBGEMunicipio", cidade.IBGEMunicipio);
+                    cmd.Parameters.AddWithValue("@Latitude", cidade.Latitude);
+                    cmd.Parameters.AddWithValue("@Longitude", cidade.Longitude);
+                    cmd.Parameters.AddWithValue("@id", cidade.CidadeId);
+                    int linhasAfetadas = cmd.ExecuteNonQuery();
+                    flag = linhasAfetadas > 0;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                throw;
+            }
+
+            return flag;
+        }
+
+        public bool Delete(int id)
+        {
+            bool flag = false;
+
+            try
+            {
+                using (var cmd = _conexao.GetConexao().CreateCommand())
+                {
+                    cmd.CommandText = "DELETE FROM aluno20.Cidades WHERE CidadeId = @id";
+                    cmd.Parameters.AddWithValue("@id", id);
+                    int linhasAfetadas = cmd.ExecuteNonQuery();
+                    flag = linhasAfetadas > 0;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                throw;
+            }
+
+            return flag;
+        }
+
         public Entidades.Cidade ReadById(int id)
         {
             Cidade cid = null;
