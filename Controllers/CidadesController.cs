@@ -116,9 +116,31 @@ namespace WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IEnumerable<Entidades.Cidade> RetornarTodasCidades()
+        public IActionResult RetornarTodasCidades()
         {
-            return _cidService.lerTodasCidades();
+            try
+            {
+                var cidades = _cidService.lerTodasCidades();
+
+                if (cidades == null || !cidades.Any())
+                {
+                    return NotFound("Nenhuma cidade encontrada no banco de dados.");
+                }
+
+                return Ok(cidades);
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao buscar os dados no banco.",
+                    Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -130,9 +152,25 @@ namespace WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public bool CriarCidade(Entidades.Cidade cidade)
+        public IActionResult CriarCidade(Entidades.Cidade cidade)
         {
-            return _cidService.criarCidade(cidade);
+            try
+            {
+                _cidService.criarCidade(cidade);
+                return StatusCode(210, "Criado com sucesso");
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao gravar os dados no banco.",
+                    Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -158,13 +196,18 @@ namespace WebAPI.Controllers
                 }
 
                 return Ok(cidade);
-            } catch (MySqlException ex)
+            } 
+            catch (MySqlException ex)
             {
                 return Problem(
                      title: "Erro inesperado",
                      detail: ex.Message,
                      statusCode: StatusCodes.Status500InternalServerError
                  );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
             }
 
         }
@@ -187,11 +230,15 @@ namespace WebAPI.Controllers
             }
             catch (MySqlException ex)
             {
-                return Problem(
-                     title: "Erro inesperado",
-                     detail: ex.Message,
-                     statusCode: StatusCodes.Status500InternalServerError
-                 );
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao gravar os dados no banco.",
+                        Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
             }
         }
 
@@ -210,13 +257,17 @@ namespace WebAPI.Controllers
             {
                 return Ok(_cidService.lerEstados());
             }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao gravar os dados no banco.",
+                    Detalhe = ex.Message
+                });
+            }
             catch (Exception ex)
             {
-                return Problem(
-                     title: "Erro inesperado",
-                     detail: ex.Message,
-                     statusCode: StatusCodes.Status500InternalServerError
-                 );
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
             }
         }
 
