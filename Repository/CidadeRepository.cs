@@ -231,6 +231,27 @@ namespace WebAPI.Repository
             return siglas;
         }
 
+        public List<Entidades.Cidade> ReadByEstado(string sigla)
+        {
+            var cidades = new List<Entidades.Cidade>();
+
+            using (var cmd = _conexao.GetConexao().CreateCommand())
+            {
+                cmd.CommandText = "SELECT * FROM aluno20.Cidades WHERE Sigla = @sigla";
+                cmd.Parameters.AddWithValue("@sigla", sigla);
+
+                using (var dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        cidades.Add(Map(dr));
+                    }
+                }
+            }
+
+            return cidades;
+        }
+
         public Entidades.Cidade Map(MySql.Data.MySqlClient.MySqlDataReader dr)
         {
             Cidade cid = new Cidade();

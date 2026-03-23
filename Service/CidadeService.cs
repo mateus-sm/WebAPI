@@ -71,5 +71,10 @@ namespace WebAPI.Service
         {
             return _cidRepository.ReadEstados();
         }
+
+        public List<Entidades.Cidade> lerCidadesPorEstado(string sigla)
+        {
+            return _cidRepository.ReadByEstado(sigla);
+        }
     }
 }

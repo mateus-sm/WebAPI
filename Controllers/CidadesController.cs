@@ -212,10 +212,79 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Problem(title: "Erro", detail: ex.Message, statusCode: 500);
+                return Problem(
+                     title: "Erro inesperado",
+                     detail: ex.Message,
+                     statusCode: StatusCodes.Status500InternalServerError
+                 );
             }
         }
 
+        /// <summary>
+        /// Retorna lista de cidades filtradas por estados.
+        /// </summary>
+        /// <returns>Lista com itens</returns>
+        [HttpGet("/estado/{uf}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult RetornarCidadesPorEstados(string uf)
+        {
+            //Validações
+            if (string.IsNullOrWhiteSpace(uf))
+            {
+                return BadRequest("A UF não pode ser nula ou vazia.");
+            }
+            uf = uf.Trim();
+            if (uf.Length != 2)
+            {
+                return BadRequest("A UF deve conter exatamente 2 caracteres (ex: SP, RJ).");
+            }
 
+            //Fluxo
+            try
+            {
+                List<Entidades.Cidade> cidades = _cidService.lerCidadesPorEstado(uf);
+
+                if (cidades == null || cidades.Count == 0)
+                {
+                    return StatusCode(404, $"Cidades não encontradas: {uf}.");
+                }
+
+                return Ok(cidades);    
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao gravar os dados no banco.",
+                    Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
+            }
+        }
+
+        //Template fluxo APIs
+        //try
+        //{
+        //    //Chamada service
+        //    return Ok("");
+        //}
+        //catch (MySqlException ex)
+        //{
+        //    return StatusCode(500, new
+        //    {
+        //        Erro = "Falha ao gravar os dados no banco.",
+        //        Detalhe = ex.Message
+        //    });
+        //}
+        //catch (Exception ex)
+        //{
+        //    return StatusCode(500, $"Erro interno na API: {ex.Message}");
+        //}
     }
 }
