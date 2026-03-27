@@ -63,7 +63,7 @@ namespace WebAPI.Controllers
         }
 
         /// <summary>
-        /// Cria aluno
+        /// Cria aluno.
         /// </summary>
         /// <param name="aluno">Json</param>
         [HttpPost]
