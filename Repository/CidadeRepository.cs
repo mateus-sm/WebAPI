@@ -26,7 +26,7 @@ namespace WebAPI.Repository
                     transacao = conn.BeginTransaction();
                     cmd.Transaction = transacao; // Vincula o comando à transação!
 
-                    cmd.CommandText = @"INSERT INTO aluno20.Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
+                    cmd.CommandText = @"INSERT INTO Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
                                  VALUES (@Nome, @Sigla, @IBGEMunicipio, @Latitude, @Longitude);";
 
                     cmd.Parameters.Add("@Nome", MySqlDbType.VarChar);
@@ -79,7 +79,7 @@ namespace WebAPI.Repository
                     {
                         cmd.Transaction = transacao;
 
-                        var sql = new StringBuilder("INSERT INTO aluno20.Cidades (CidadeId, Nome, Sigla, IBGEMunicipio, Latitude, Longitude) VALUES ");
+                        var sql = new StringBuilder("INSERT INTO Cidades (CidadeId, Nome, Sigla, IBGEMunicipio, Latitude, Longitude) VALUES ");
 
                         for (int j = 0; j < lote.Count; j++)
                         {
@@ -118,7 +118,7 @@ namespace WebAPI.Repository
             {
                 using (var cmd = _conexao.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = @"INSERT INTO aluno20.Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
+                    cmd.CommandText = @"INSERT INTO Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
                                          VALUES (@Nome, @Sigla, @IBGEMunicipio, @Latitude, @Longitude);";
 
                     cmd.Parameters.AddWithValue("@Nome", cidade.Nome);
@@ -148,7 +148,7 @@ namespace WebAPI.Repository
             {
                 using (var cmd = _conexao.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = "SELECT * FROM aluno20.Cidades";
+                    cmd.CommandText = "SELECT * FROM Cidades";
                     var dr = cmd.ExecuteReader();
                     while (dr.Read())
                     {
@@ -171,7 +171,7 @@ namespace WebAPI.Repository
             {
                 using (var cmd = _conexao.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = @"UPDATE aluno20.Cidades 
+                    cmd.CommandText = @"UPDATE Cidades 
                                         SET Nome = @Nome, Sigla = @Sigla, IBGEMunicipio = @IBGEMunicipio, Latitude = @Latitude, Longitude = @Longitude
                                         WHERE CidadeId = @id;";
 
@@ -201,7 +201,7 @@ namespace WebAPI.Repository
             {
                 using (var cmd = _conexao.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = "DELETE FROM aluno20.Cidades WHERE CidadeId = @id";
+                    cmd.CommandText = "DELETE FROM Cidades WHERE CidadeId = @id";
                     cmd.Parameters.AddWithValue("@id", id);
                     int linhasAfetadas = cmd.ExecuteNonQuery();
                     flag = linhasAfetadas > 0;
@@ -223,7 +223,7 @@ namespace WebAPI.Repository
             {
                 using (var cmd = _conexao.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = "SELECT * FROM aluno20.Cidades WHERE CidadeId = @id";
+                    cmd.CommandText = "SELECT * FROM Cidades WHERE CidadeId = @id";
                     cmd.Parameters.AddWithValue("@id", id);
 
                     var dr = cmd.ExecuteReader();
@@ -250,7 +250,7 @@ namespace WebAPI.Repository
             {
                 using (var cmd = _conexao.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = "SELECT COUNT(*) FROM aluno20.Cidades";
+                    cmd.CommandText = "SELECT COUNT(*) FROM Cidades";
                     count = Convert.ToInt32(cmd.ExecuteScalar());
                 }
             }
@@ -268,7 +268,7 @@ namespace WebAPI.Repository
 
             using (var cmd = _conexao.GetConexao().CreateCommand())
             {
-                cmd.CommandText = "SELECT DISTINCT Sigla FROM aluno20.Cidades";
+                cmd.CommandText = "SELECT DISTINCT Sigla FROM Cidades";
 
                 // O DataReader também precisa do using para não travar o banco!
                 using (var dr = cmd.ExecuteReader())
@@ -289,7 +289,7 @@ namespace WebAPI.Repository
 
             using (var cmd = _conexao.GetConexao().CreateCommand())
             {
-                cmd.CommandText = "SELECT * FROM aluno20.Cidades WHERE Sigla = @sigla";
+                cmd.CommandText = "SELECT * FROM Cidades WHERE Sigla = @sigla";
                 cmd.Parameters.AddWithValue("@sigla", sigla);
 
                 using (var dr = cmd.ExecuteReader())
