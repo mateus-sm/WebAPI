@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-cidades
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cidades_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile 
+    container_name: webapi-cidades
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=db;Database=cidades_db;Uid=root;Pwd=root;
+
+volumes:
+  mysql_data:
