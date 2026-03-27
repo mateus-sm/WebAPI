@@ -2,10 +2,11 @@
 {
     public class Aluno
     {
-        public int Id { get; set; }
+        public int AlunoId { get; set; }
         public string Nome { get; set; }
         public int Idade { get; set; }
-        public Cidade Cidade { get; set; }
+        public int CidadeId { get; set; }
+        public byte[]? Foto { get; set; }
     }
 
 }

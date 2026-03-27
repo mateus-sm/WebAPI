@@ -13,9 +13,9 @@ CREATE TABLE IF NOT EXISTS `Cidades` (
 
 CREATE TABLE IF NOT EXISTS `Aluno` (
   `AlunoId` int NOT NULL AUTO_INCREMENT,
-  `Nome` varchar(100) DEFAULT NULL,
-  `Idade` int DEFAULT NULL,
-  `CidadeId` int DEFAULT NULL,
+  `Nome` varchar(100) NOT NULL,
+  `Idade` int NOT NULL,
+  `CidadeId` int NOT NULL,
   `Foto` longblob,
   PRIMARY KEY (`AlunoId`),
   CONSTRAINT `FK_Aluno_Cidades` FOREIGN KEY (`CidadeId`) REFERENCES `Cidades` (`CidadeId`) ON DELETE SET NULL

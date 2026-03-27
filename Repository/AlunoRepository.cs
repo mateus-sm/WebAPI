@@ -65,37 +65,32 @@ namespace WebAPI.Repository
 
         public bool Criar(Entidades.Aluno aluno)
         {
-
             bool sucesso = false;
             try
             {
                 using (var cmd = _context.GetConexao().CreateCommand())
                 {
-                    cmd.CommandText = @"insert Aluno(Nome, Idade, CidadeId) 
-                                        values (@Nome, @Idade, @CidadeId) ";
+                    cmd.CommandText = @"insert Aluno(AlunoId, Nome, Idade, CidadeId, Foto) 
+                                        values (@AlunoId, @Nome, @Idade, @CidadeId, @Foto)";
 
-
+                    cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
                     cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
-                    cmd.Parameters.AddWithValue("@Idade", aluno.Id);
-                    cmd.Parameters.AddWithValue("@CidadeId", aluno.Cidade.CidadeId);
+                    cmd.Parameters.AddWithValue("@Idade", aluno.Idade);
+                    cmd.Parameters.AddWithValue("@CidadeId", aluno.CidadeId);
+                    cmd.Parameters.AddWithValue("@Foto", aluno.Foto);
 
                     //insert, update, delete e sp
                     cmd.ExecuteNonQuery();
-
-                    aluno.Id = (int)cmd.LastInsertedId;
-
                     sucesso = true;
                 }
             }
             catch (MySqlException ex)
             {
-
                 //serilog...
                 throw;
             }
 
             return sucesso;
-
         }
 
         public bool Alterar(Entidades.Aluno aluno)
@@ -110,17 +105,17 @@ namespace WebAPI.Repository
                     transacao = _context.GetConexao().BeginTransaction();
 
                     cmd.CommandText = "select * from Aluno where AlunoId = @AlunoId";
-                    cmd.Parameters.AddWithValue("@AlunoId", aluno.Id);
+                    cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
                     var dr = cmd.ExecuteReader();
                     if (dr.Read())
                     {
                         cmd.CommandText = @"insert AlunoHistorico(AlunoId, Nome, Idade, CidadeId) 
                                            values (@AlunoId, @Nome, @Idade, @CidadeId) ";
 
-                        cmd.Parameters.AddWithValue("@AlunoId", aluno.Id);
+                        cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
                         cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
-                        cmd.Parameters.AddWithValue("@Idade", aluno.Id);
-                        cmd.Parameters.AddWithValue("@CidadeId", aluno.Cidade.CidadeId);
+                        cmd.Parameters.AddWithValue("@Idade", aluno.Idade);
+                        cmd.Parameters.AddWithValue("@CidadeId", aluno.CidadeId);
                         cmd.Parameters.AddWithValue("@Data", DateTime.Now);
                         //insert, update, delete e sp
                         cmd.ExecuteNonQuery();
@@ -135,9 +130,9 @@ namespace WebAPI.Repository
                                         where AlunoId = @AlunoId";
 
                     cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
-                    cmd.Parameters.AddWithValue("@Idade", aluno.Id);
-                    cmd.Parameters.AddWithValue("@CidadeId", aluno.Cidade.CidadeId);
-                    cmd.Parameters.AddWithValue("@AlunoId", aluno.Id);
+                    cmd.Parameters.AddWithValue("@Idade", aluno.Idade);
+                    cmd.Parameters.AddWithValue("@CidadeId", aluno.CidadeId);
+                    cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
 
                     //insert, update, delete e sp
                     cmd.ExecuteNonQuery();
@@ -190,11 +185,12 @@ namespace WebAPI.Repository
                                         from Aluno 
                                         where AlunoId = " + id;
 
-                    var dr = cmd.ExecuteReader();
-
-                    if (dr.Read())
+                    using (var dr = cmd.ExecuteReader())
                     {
-                        aluno = Map(dr);
+                        if (dr.Read())
+                        {
+                            aluno = Map(dr);
+                        }
                     }
                 }
             }
@@ -204,9 +200,7 @@ namespace WebAPI.Repository
                 //serilog...
                 throw;
             }
-
             return aluno;
-
         }
 
         public IEnumerable<Entidades.Aluno> ObterTodos()
@@ -274,16 +268,11 @@ namespace WebAPI.Repository
         public Entidades.Aluno Map(MySql.Data.MySqlClient.MySqlDataReader dr)
         {
             Aluno aluno = new Aluno();
-            //aluno.Id = Convert.ToInt32(dr["AlunoId"]);
-            //aluno.Nome = dr["Nome"].ToString();
-            aluno.Id = dr.GetInt32("AlunoId");
+            aluno.AlunoId = dr.GetInt32("AlunoId");
             aluno.Nome = dr.GetString("Nome");
             aluno.Idade = dr.GetInt32("Idade");
-            aluno.Cidade = new Cidade()
-            {
-                CidadeId = dr.GetInt32("CidadeId")
-            };
-
+            aluno.CidadeId = dr.GetInt32("CidadeId");
+            aluno.Foto = dr["Foto"] as byte[];
             return aluno;
         }
 
