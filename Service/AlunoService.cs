@@ -12,15 +12,7 @@ namespace WebAPI.Service
             _repository = repository;
         }
 
-        public bool Criar(Entidades.Aluno aluno)
-        {
-
-            //aplica regra de negócio
-            return _repository.Criar(aluno);
-
-        }
-
-        public bool Alterar(Entidades.Aluno aluno)
+        public bool alunoValido(Entidades.Aluno aluno)
         {
             if (string.IsNullOrWhiteSpace(aluno.Nome))
                 return false;
@@ -33,6 +25,22 @@ namespace WebAPI.Service
                 return false;
 
             if (aluno.CidadeId < 1 || aluno.CidadeId > 5570)
+                return false;
+
+            return true;
+        }
+
+        public bool Criar(Entidades.Aluno aluno)
+        {
+            if (!alunoValido(aluno))
+                return false;
+
+            return _repository.Criar(aluno);
+        }
+
+        public bool Alterar(Entidades.Aluno aluno)
+        {
+            if (!alunoValido(aluno))
                 return false;
 
             return _repository.Alterar(aluno);
