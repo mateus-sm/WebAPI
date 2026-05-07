@@ -95,61 +95,51 @@ namespace WebAPI.Repository
 
         public bool Alterar(Entidades.Aluno aluno)
         {
-
             bool sucesso = false;
             MySql.Data.MySqlClient.MySqlTransaction? transacao = null;
+
             try
             {
                 using (var cmd = _context.GetConexao().CreateCommand())
                 {
                     transacao = _context.GetConexao().BeginTransaction();
+                    cmd.Transaction = transacao;
 
                     cmd.CommandText = "select * from Aluno where AlunoId = @AlunoId";
                     cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
                     var dr = cmd.ExecuteReader();
-                    if (dr.Read())
-                    {
-                        cmd.CommandText = @"insert AlunoHistorico(AlunoId, Nome, Idade, CidadeId) 
-                                           values (@AlunoId, @Nome, @Idade, @CidadeId) ";
+                    bool existe = dr.Read();
+                    dr.Close();
 
-                        cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
+                    if (existe)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.CommandText = @"update Aluno
+                                            set Nome = @Nome,
+                                                Idade = @Idade,
+                                                CidadeId = @CidadeId,
+                                                Foto = @Foto
+                                            where AlunoId = @AlunoId";
+
                         cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
                         cmd.Parameters.AddWithValue("@Idade", aluno.Idade);
                         cmd.Parameters.AddWithValue("@CidadeId", aluno.CidadeId);
-                        cmd.Parameters.AddWithValue("@Data", DateTime.Now);
-                        //insert, update, delete e sp
+                        cmd.Parameters.AddWithValue("@Foto", aluno.Foto);
+                        cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
+
                         cmd.ExecuteNonQuery();
+                        transacao.Commit();
+                        sucesso = true;
                     }
-
-
-                    cmd.Parameters.Clear();
-                    cmd.CommandText = @"update Aluno 
-                                        set Nome = @Nome, 
-                                            Idade = @Idade,
-                                            CidadeId = @CidadeId
-                                        where AlunoId = @AlunoId";
-
-                    cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
-                    cmd.Parameters.AddWithValue("@Idade", aluno.Idade);
-                    cmd.Parameters.AddWithValue("@CidadeId", aluno.CidadeId);
-                    cmd.Parameters.AddWithValue("@AlunoId", aluno.AlunoId);
-
-                    //insert, update, delete e sp
-                    cmd.ExecuteNonQuery();
-                    transacao.Commit();
-                    sucesso = true;
                 }
             }
             catch (MySqlException ex)
             {
                 transacao?.Rollback();
-
-                //serilog...
                 throw;
             }
 
             return sucesso;
-
         }
 
         public void Excluir(int id)

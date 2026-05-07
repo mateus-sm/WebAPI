@@ -1,4 +1,7 @@
-﻿namespace WebAPI.Service
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using System.Text.RegularExpressions;
+
+namespace WebAPI.Service
 {
     public class AlunoService
     {
@@ -19,10 +22,20 @@
 
         public bool Alterar(Entidades.Aluno aluno)
         {
+            if (string.IsNullOrWhiteSpace(aluno.Nome))
+                return false;
 
-            //aplica regra de negócio
+            // Aceita letras, espaços, hífens e apóstrofos
+            if (!Regex.IsMatch(aluno.Nome, @"^[\p{L}]+([ '-][\p{L}]+)*$"))
+                return false;
+
+            if (aluno.Idade < 0)
+                return false;
+
+            if (aluno.CidadeId < 1 || aluno.CidadeId > 5570)
+                return false;
+
             return _repository.Alterar(aluno);
-
         }
 
         public Entidades.Aluno Obter(int id)
