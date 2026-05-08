@@ -130,6 +130,32 @@ namespace WebAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult GetAll()
+        {
+            try
+            {
+                var alunos = _alunoService.ObterTodos();
+                if (alunos == null)
+                    return NotFound("Alunos não encontrados.");
+                return StatusCode(200, alunos);
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new
+                {
+                    Erro = "Falha ao acessar o banco de dados.",
+                    Detalhe = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno na API: {ex.Message}");
+            }
+        }
+
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

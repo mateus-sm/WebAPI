@@ -195,7 +195,6 @@ namespace WebAPI.Repository
 
         public IEnumerable<Entidades.Aluno> ObterTodos()
         {
-
             List<Entidades.Aluno> alunos = new();
             try
             {
@@ -214,13 +213,10 @@ namespace WebAPI.Repository
             }
             catch (MySqlException ex)
             {
-
-                //serilog...
                 throw;
             }
 
             return alunos;
-
         }
 
         public IEnumerable<Entidades.Aluno> Consultar(string nome)
