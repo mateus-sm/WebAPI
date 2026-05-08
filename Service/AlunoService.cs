@@ -12,37 +12,31 @@ namespace WebAPI.Service
             _repository = repository;
         }
 
-        public bool alunoValido(Entidades.Aluno aluno)
+        public void ValidaAluno(Entidades.Aluno aluno)
         {
             if (string.IsNullOrWhiteSpace(aluno.Nome))
-                return false;
+                throw new Exception("Nome vazio.");
 
             // Aceita letras, espaços, hífens e apóstrofos
             if (!Regex.IsMatch(aluno.Nome, @"^[\p{L}]+([ '-][\p{L}]+)*$"))
-                return false;
+                throw new Exception("Nome com caracteres invalidos.");
 
             if (aluno.Idade < 0)
-                return false;
+                throw new Exception("Idade negativa.");
 
             if (aluno.CidadeId < 1 || aluno.CidadeId > 5570)
-                return false;
-
-            return true;
+                throw new Exception("Codigo da cidade fora dos limites do IBGE.");
         }
 
         public bool Criar(Entidades.Aluno aluno)
         {
-            if (!alunoValido(aluno))
-                return false;
-
+            ValidaAluno(aluno);
             return _repository.Criar(aluno);
         }
 
         public bool Alterar(Entidades.Aluno aluno)
         {
-            if (!alunoValido(aluno))
-                return false;
-
+            ValidaAluno(aluno);
             return _repository.Alterar(aluno);
         }
 
