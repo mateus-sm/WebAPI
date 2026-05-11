@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using MySql.Data.MySqlClient;
+using System.Xml.Linq;
 using WebAPI.Entidades;
 using WebAPI.Repository;
-using MySql.Data.MySqlClient;
 
 namespace WebAPI.Controllers
 {
@@ -224,6 +225,34 @@ namespace WebAPI.Controllers
                 var alu = _alunoService.Consultar(name);
                 return Ok(alu);
             } 
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro no Banco de dados", Erro = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Retorna a quantidade total de alunos registrados.
+        /// </summary>
+        /// <remarks>Utilize este endpoint para obter rapidamente o número total de alunos cadastrados no
+        /// sistema. Em caso de falha no banco de dados ou erro interno, uma resposta HTTP 500 será retornada com
+        /// informações sobre o erro.</remarks>
+        /// <returns>Um resultado HTTP 200 contendo um objeto com a quantidade total de alunos se a operação for bem-sucedida;
+        /// caso contrário, um resultado HTTP 500 com detalhes do erro.</returns>
+        [HttpGet("qtdAlunos")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult ContarAlunos()
+        {
+            try
+            {
+                var qtd = _alunoService.TotalAlunos();
+                return Ok(new {QuantidadeAlunos = qtd});
+            }
             catch (MySqlException ex)
             {
                 return StatusCode(500, new { Mensagem = "Erro no Banco de dados", Erro = ex.Message });
