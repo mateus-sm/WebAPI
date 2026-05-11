@@ -262,5 +262,34 @@ namespace WebAPI.Controllers
                 return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Exclui o aluno identificado pelo ID especificado.
+        /// </summary>
+        /// <remarks>Esta ação remove permanentemente o aluno do sistema. Em caso de erro no banco de
+        /// dados ou falha interna, uma mensagem de erro detalhada é retornada.</remarks>
+        /// <param name="id">O identificador do aluno a ser excluído. Deve ser maior ou igual a zero.</param>
+        /// <returns>Um resultado de ação que indica o sucesso ou a falha da operação. Retorna 200 (OK) se o aluno for excluído
+        /// com sucesso; 400 (Bad Request) se o ID for inválido; ou 500 (Internal Server Error) em caso de erro interno.</returns>
+        [HttpDelete("{id}")]
+        public IActionResult Deletar(int id)
+        {
+            if (id < 0)
+                return BadRequest("Id invalido, menor que zero.");
+
+            try
+            {
+                _alunoService.Excluir(id);
+                return Ok(new { mensagem = $"Aluno {id} excluido!"});
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro no Banco de dados", Erro = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
+            }
+        }
     }
 }

@@ -59,7 +59,6 @@ namespace WebAPI.Service
         public void Excluir(int id)
         {
             _repository.Excluir(id);
-
         }
 
         public bool AlunoExistente(string nome)
