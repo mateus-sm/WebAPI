@@ -291,5 +291,31 @@ namespace WebAPI.Controllers
                 return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Verifica se um aluno com o nome especificado existe no banco de dados.
+        /// </summary>
+        /// <remarks>Use este endpoint para validar a existência de um aluno antes de realizar operações
+        /// dependentes de cadastro. O resultado é retornado em formato JSON com uma mensagem descritiva.</remarks>
+        /// <param name="nome">O nome do aluno a ser verificado. Não pode ser nulo ou vazio.</param>
+        /// <returns>Um objeto HTTP 200 contendo uma mensagem informando se o aluno existe ou não. Retorna HTTP 500 em caso de
+        /// erro interno ou de banco de dados.</returns>
+        [HttpGet("existe/{nome}")]
+        public IActionResult AlunoExistente(string nome)
+        {
+            try
+            {
+                var flag = _alunoService.AlunoExistente(nome);
+                return Ok(new {mensagem = $"Aluno {nome} " + (flag ? "existe no banco" : "não existe no banco") });
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro no Banco de dados", Erro = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
+            }
+        }
     }
 }

@@ -55,7 +55,6 @@ namespace WebAPI.Service
             return _repository.TotalAlunos();
         }
 
-
         public void Excluir(int id)
         {
             _repository.Excluir(id);
