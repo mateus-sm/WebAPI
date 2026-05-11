@@ -8,14 +8,9 @@ namespace WebAPI.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AlunosController : ControllerBase
+    public class AlunosController(Service.AlunoService alunoService) : ControllerBase
     {
-        private readonly Service.AlunoService _alunoService;
-
-        public AlunosController(Service.AlunoService alunoService)
-        {
-            _alunoService = alunoService;
-        }
+        private readonly Service.AlunoService _alunoService = alunoService;
 
         /// <summary>
         /// Recebe e armazena a foto do aluno.
@@ -36,7 +31,7 @@ namespace WebAPI.Controllers
             arquivo.CopyTo(ms);
             byte[] foto = ms.ToArray();
 
-            bool sucesso = _alunoService.saveFoto(id, foto);
+            bool sucesso = _alunoService.SaveFoto(id, foto);
 
             if (!sucesso)
                 return NotFound("Aluno não encontrado.");
@@ -54,7 +49,7 @@ namespace WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult BuscarFoto(int id)
         {
-            byte[]? foto = _alunoService.getFoto(id);
+            byte[]? foto = _alunoService.GetFoto(id);
 
             if (foto == null)
                 return NotFound("Foto não encontrada.");

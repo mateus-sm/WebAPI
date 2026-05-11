@@ -6,18 +6,14 @@ namespace WebAPI.Controllers
 {
     [Route("api/cidades")]
     [ApiController]
-    public class CidadesController : ControllerBase
+    public class CidadesController(Service.CidadeService cidService) : ControllerBase
     {
-        private readonly Service.CidadeService _cidService;
-
-        public CidadesController(Service.CidadeService cidService)
-        {
-            _cidService = cidService;
-        }
+        private readonly Service.CidadeService _cidService = cidService;
 
         /// <summary>
         /// Importa cidades de um arquivo .csv e insere no banco de dados.
         /// </summary>
+        /// <param name="arquivo">Arquivo csv contendo as cidades.</param>
         /// <param name="usarLote">Set <c>true</c> para processar 1000 linhas por vez.</param>
         /// <returns>Mensagem de confirmação</returns>
         [HttpPost("/importar")]
@@ -41,24 +37,25 @@ namespace WebAPI.Controllers
             try
             {
                 // 3. Abre um fluxo de leitura (Stream) para ler o conteúdo do arquivo
-                using (var stream = arquivo.OpenReadStream())
-                using (var reader = new StreamReader(stream))
+                using var stream = arquivo.OpenReadStream();
+                using var reader = new StreamReader(stream);
+                // Lê o arquivo inteiro como uma única string
+                // var conteudo = reader.ReadToEnd();
+
+                // Lê linha por linha e transforma em lista
+                var cidadesParaSalvar = new List<Entidades.Cidade>();
+                int numeroLinha = 1;
+
+                if (!reader.EndOfStream)
                 {
-                    // Lê o arquivo inteiro como uma única string
-                    // var conteudo = reader.ReadToEnd();
+                    reader.ReadLine(); // Pula a primeira linha
+                }
 
-                    // Lê linha por linha e transforma em lista
-                    var cidadesParaSalvar = new List<Entidades.Cidade>();
-                    int numeroLinha = 1;
-
-                    if (!reader.EndOfStream)
+                while (!reader.EndOfStream)
+                {
+                    var linha = reader.ReadLine();
+                    if (!String.IsNullOrEmpty(linha))
                     {
-                        reader.ReadLine(); // Pula a primeira linha
-                    }
-
-                    while (!reader.EndOfStream)
-                    {
-                        var linha = reader.ReadLine();
                         var cidade = _cidService.MapearLinhaCSV(linha);
 
                         if (cidade == null)
@@ -69,34 +66,34 @@ namespace WebAPI.Controllers
                         cidadesParaSalvar.Add(cidade);
                         numeroLinha++;
                     }
+                }
 
-                    // 4. Fase de Inserção (Tudo ou Nada)
-                    try
+                // 4. Fase de Inserção (Tudo ou Nada)
+                try
+                {
+                    if (usarLote)
                     {
-                        if (usarLote)
-                        {
-                            _cidService.SalvarCidadesEmLote2(cidadesParaSalvar);
-                        } else
-                        {
-                            _cidService.SalvarCidadesEmLote(cidadesParaSalvar);
-                        }
-                        return Ok(new { Mensagem = $"{cidadesParaSalvar.Count} cidades importadas com sucesso!" });
+                        _cidService.SalvarCidadesEmLote2(cidadesParaSalvar);
                     }
-                    catch (MySqlException ex)
+                    else
                     {
-                        // Esse throw vem direto do repository
-                        return StatusCode(500, new
-                        {
-                            Erro = "Falha ao gravar os dados no banco.",
-                            Detalhe = ex.Message
-                        });
+                        _cidService.SalvarCidadesEmLote(cidadesParaSalvar);
                     }
-                    catch (Exception ex)
+                    return Ok(new { Mensagem = $"{cidadesParaSalvar.Count} cidades importadas com sucesso!" });
+                }
+                catch (MySqlException ex)
+                {
+                    // Esse throw vem direto do repository
+                    return StatusCode(500, new
                     {
-                        // Qualquer outro throw
-                        return StatusCode(500, $"Erro interno na API: {ex.Message}");
-                    }
-
+                        Erro = "Falha ao gravar os dados no banco.",
+                        Detalhe = ex.Message
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Qualquer outro throw
+                    return StatusCode(500, $"Erro interno na API: {ex.Message}");
                 }
             }
             catch (Exception ex)
@@ -121,9 +118,9 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var cidades = _cidService.lerTodasCidades();
+                var cidades = _cidService.LerTodasCidades();
 
-                if (cidades == null || !cidades.Any())
+                if (cidades == null || cidades.Count == 0)
                 {
                     return NotFound("Nenhuma cidade encontrada no banco de dados.");
                 }
@@ -157,7 +154,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                _cidService.criarCidade(cidade);
+                _cidService.CriarCidade(cidade);
                 return StatusCode(210, "Criado com sucesso");
             }
             catch (MySqlException ex)
@@ -189,7 +186,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var cidade = _cidService.lerCidadePorId(id);
+                var cidade = _cidService.LerCidadePorId(id);
 
                 if (cidade == null)
                 {
@@ -226,7 +223,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var quantidade = _cidService.lerQuantidadeCidades();
+                var quantidade = _cidService.LerQuantidadeCidades();
                 return Ok(new { TotalCidades = quantidade });
             }
             catch (MySqlException ex)
@@ -256,7 +253,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                return Ok(_cidService.lerEstados());
+                return Ok(_cidService.LerEstados());
             }
             catch (MySqlException ex)
             {
@@ -297,7 +294,7 @@ namespace WebAPI.Controllers
             //Fluxo
             try
             {
-                List<Entidades.Cidade> cidades = _cidService.lerCidadesPorEstado(uf);
+                List<Entidades.Cidade> cidades = _cidService.LerCidadesPorEstado(uf);
 
                 if (cidades == null || cidades.Count == 0)
                 {
@@ -325,7 +322,7 @@ namespace WebAPI.Controllers
         /// </summary>
         /// <param name="cidade"></param>
         /// <returns>Flag de cofnirmação</returns>
-        [HttpPut("{id}")]
+        [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -333,7 +330,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                bool flag = _cidService.atualizarCidade(cidade);
+                bool flag = _cidService.AtualizarCidade(cidade);
                 return Ok("Alterado com sucesso.");
             }
             catch (MySqlException ex)
@@ -363,7 +360,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                bool flag = _cidService.deletarCidade(id);
+                bool flag = _cidService.DeletarCidade(id);
                 return Ok("Deletado com sucesso.");
             }
             catch (MySqlException ex)

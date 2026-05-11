@@ -3,14 +3,9 @@ using System.Text.RegularExpressions;
 
 namespace WebAPI.Service
 {
-    public class AlunoService
+    public class AlunoService(Repository.AlunoRepository repository)
     {
-        private readonly Repository.AlunoRepository _repository;
-
-        public AlunoService(Repository.AlunoRepository repository)
-        {
-            _repository = repository;
-        }
+        private readonly Repository.AlunoRepository _repository = repository;
 
         public void ValidaAluno(Entidades.Aluno aluno)
         {
@@ -40,7 +35,7 @@ namespace WebAPI.Service
             return _repository.Alterar(aluno);
         }
 
-        public Entidades.Aluno Obter(int id)
+        public Entidades.Aluno? Obter(int id)
         {
             return _repository.Obter(id);
         }
@@ -77,12 +72,12 @@ namespace WebAPI.Service
             return _repository.AlunoExistente(id);
         }
 
-        public bool saveFoto(int id, byte[] foto)
+        public bool SaveFoto(int id, byte[] foto)
         {
             return _repository.SalvarFoto(id, foto);
         }
 
-        public byte[]? getFoto(int id)
+        public byte[]? GetFoto(int id)
         {
             return _repository.BuscarFoto(id);
         }

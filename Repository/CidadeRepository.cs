@@ -4,14 +4,9 @@ using WebAPI.Entidades;
 
 namespace WebAPI.Repository
 {
-    public class CidadeRepository
+    public class CidadeRepository(MySqlDbContext conexao)
     {
-        private readonly MySqlDbContext _conexao;
-
-        public CidadeRepository(MySqlDbContext conexao)
-        {
-            _conexao = conexao;
-        }
+        private readonly MySqlDbContext _conexao = conexao;
 
         public void SaveAllCities(List<Entidades.Cidade> cidades)
         {
@@ -21,36 +16,34 @@ namespace WebAPI.Repository
             {
                 var conn = _conexao.GetConexao();
 
-                using (var cmd = conn.CreateCommand())
-                {
-                    transacao = conn.BeginTransaction();
-                    cmd.Transaction = transacao; // Vincula o comando à transação!
+                using var cmd = conn.CreateCommand();
+                transacao = conn.BeginTransaction();
+                cmd.Transaction = transacao; // Vincula o comando à transação!
 
-                    cmd.CommandText = @"INSERT INTO Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
+                cmd.CommandText = @"INSERT INTO Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
                                  VALUES (@Nome, @Sigla, @IBGEMunicipio, @Latitude, @Longitude);";
 
-                    cmd.Parameters.Add("@Nome", MySqlDbType.VarChar);
-                    cmd.Parameters.Add("@Sigla", MySqlDbType.VarChar);
-                    cmd.Parameters.Add("@IBGEMunicipio", MySqlDbType.Int32);
-                    cmd.Parameters.Add("@Latitude", MySqlDbType.Decimal);
-                    cmd.Parameters.Add("@Longitude", MySqlDbType.Decimal);
+                cmd.Parameters.Add("@Nome", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@Sigla", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@IBGEMunicipio", MySqlDbType.Int32);
+                cmd.Parameters.Add("@Latitude", MySqlDbType.Decimal);
+                cmd.Parameters.Add("@Longitude", MySqlDbType.Decimal);
 
-                    foreach (var cidade in cidades)
-                    {
-                        // Apenas substitui os valores na memória a cada volta do loop
-                        cmd.Parameters["@Nome"].Value = cidade.Nome.Trim('"');
-                        cmd.Parameters["@Sigla"].Value = cidade.Sigla;
-                        cmd.Parameters["@IBGEMunicipio"].Value = cidade.IBGEMunicipio;
+                foreach (var cidade in cidades)
+                {
+                    // Apenas substitui os valores na memória a cada volta do 
+                    cmd.Parameters["@Nome"].Value = cidade.Nome != null ? cidade.Nome.Trim('"') : "";
+                    cmd.Parameters["@Sigla"].Value = cidade.Sigla;
+                    cmd.Parameters["@IBGEMunicipio"].Value = cidade.IBGEMunicipio;
 
-                        // Trata o DBNull caso a coordenada seja nula
-                        cmd.Parameters["@Latitude"].Value = cidade.Latitude.HasValue ? cidade.Latitude.Value : DBNull.Value;
-                        cmd.Parameters["@Longitude"].Value = cidade.Longitude.HasValue ? cidade.Longitude.Value : DBNull.Value;
+                    // Trata o DBNull caso a coordenada seja nula
+                    cmd.Parameters["@Latitude"].Value = cidade.Latitude.HasValue ? cidade.Latitude.Value : DBNull.Value;
+                    cmd.Parameters["@Longitude"].Value = cidade.Longitude.HasValue ? cidade.Longitude.Value : DBNull.Value;
 
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    transacao.Commit();
+                    cmd.ExecuteNonQuery();
                 }
+
+                transacao.Commit();
             }
             catch (MySqlException)
             {
@@ -75,30 +68,28 @@ namespace WebAPI.Repository
                 {
                     var lote = cidades.Skip(i).Take(tamanhoDoLote).ToList();
 
-                    using (var cmd = conn.CreateCommand())
+                    using var cmd = conn.CreateCommand();
+                    cmd.Transaction = transacao;
+
+                    var sql = new StringBuilder("INSERT INTO Cidades (CidadeId, Nome, Sigla, IBGEMunicipio, Latitude, Longitude) VALUES ");
+
+                    for (int j = 0; j < lote.Count; j++)
                     {
-                        cmd.Transaction = transacao;
+                        var cidade = lote[j];
 
-                        var sql = new StringBuilder("INSERT INTO Cidades (CidadeId, Nome, Sigla, IBGEMunicipio, Latitude, Longitude) VALUES ");
+                        sql.Append($"(@cid{j}, @n{j}, @s{j}, @ibge{j}, @lat{j}, @lon{j})");
+                        sql.Append(j == lote.Count - 1 ? ";" : ", ");
 
-                        for (int j = 0; j < lote.Count; j++)
-                        {
-                            var cidade = lote[j];
-
-                            sql.Append($"(@cid{j}, @n{j}, @s{j}, @ibge{j}, @lat{j}, @lon{j})");
-                            sql.Append(j == lote.Count - 1 ? ";" : ", ");
-
-                            cmd.Parameters.AddWithValue($"@cid{j}", cidade.CidadeId);
-                            cmd.Parameters.AddWithValue($"@n{j}", cidade.Nome.Trim('"'));
-                            cmd.Parameters.AddWithValue($"@s{j}", cidade.Sigla);
-                            cmd.Parameters.AddWithValue($"@ibge{j}", cidade.IBGEMunicipio);
-                            cmd.Parameters.AddWithValue($"@lat{j}", cidade.Latitude.HasValue ? cidade.Latitude.Value : DBNull.Value);
-                            cmd.Parameters.AddWithValue($"@lon{j}", cidade.Longitude.HasValue ? cidade.Longitude.Value : DBNull.Value);
-                        }
-
-                        cmd.CommandText = sql.ToString();
-                        cmd.ExecuteNonQuery();
+                        cmd.Parameters.AddWithValue($"@cid{j}", cidade.CidadeId);
+                        cmd.Parameters.AddWithValue($"@n{j}", cidade.Nome != null ? cidade.Nome.Trim('"') : "");
+                        cmd.Parameters.AddWithValue($"@s{j}", cidade.Sigla);
+                        cmd.Parameters.AddWithValue($"@ibge{j}", cidade.IBGEMunicipio);
+                        cmd.Parameters.AddWithValue($"@lat{j}", cidade.Latitude.HasValue ? cidade.Latitude.Value : DBNull.Value);
+                        cmd.Parameters.AddWithValue($"@lon{j}", cidade.Longitude.HasValue ? cidade.Longitude.Value : DBNull.Value);
                     }
+
+                    cmd.CommandText = sql.ToString();
+                    cmd.ExecuteNonQuery();
                 }
 
                 transacao.Commit();
@@ -116,24 +107,22 @@ namespace WebAPI.Repository
 
             try
             {
-                using (var cmd = _conexao.GetConexao().CreateCommand())
-                {
-                    cmd.CommandText = @"INSERT INTO Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
+                using var cmd = _conexao.GetConexao().CreateCommand();
+                cmd.CommandText = @"INSERT INTO Cidades (Nome, Sigla, IBGEMunicipio, Latitude, Longitude)
                                          VALUES (@Nome, @Sigla, @IBGEMunicipio, @Latitude, @Longitude);";
 
-                    cmd.Parameters.AddWithValue("@Nome", cidade.Nome);
-                    cmd.Parameters.AddWithValue("@Sigla", cidade.Sigla);
-                    cmd.Parameters.AddWithValue("@IBGEMunicipio", cidade.IBGEMunicipio);
-                    cmd.Parameters.AddWithValue("@Latitude", cidade.Latitude);
-                    cmd.Parameters.AddWithValue("@Longitude", cidade.Longitude);
+                cmd.Parameters.AddWithValue("@Nome", cidade.Nome);
+                cmd.Parameters.AddWithValue("@Sigla", cidade.Sigla);
+                cmd.Parameters.AddWithValue("@IBGEMunicipio", cidade.IBGEMunicipio);
+                cmd.Parameters.AddWithValue("@Latitude", cidade.Latitude);
+                cmd.Parameters.AddWithValue("@Longitude", cidade.Longitude);
 
-                    cmd.ExecuteNonQuery();
-                    cidade.CidadeId = (int)cmd.LastInsertedId;
-                    
-                    flag = true;
-                }
+                cmd.ExecuteNonQuery();
+                cidade.CidadeId = (int)cmd.LastInsertedId;
+
+                flag = true;
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 throw;
             }
@@ -143,23 +132,23 @@ namespace WebAPI.Repository
 
         public List<Entidades.Cidade> Read()
         {
-            List<Entidades.Cidade> cid = new();
+            List<Entidades.Cidade> cid = [];
+
             try
             {
-                using (var cmd = _conexao.GetConexao().CreateCommand())
+                using var cmd = _conexao.GetConexao().CreateCommand();
+                cmd.CommandText = "SELECT * FROM Cidades";
+                var dr = cmd.ExecuteReader();
+                while (dr.Read())
                 {
-                    cmd.CommandText = "SELECT * FROM Cidades";
-                    var dr = cmd.ExecuteReader();
-                    while (dr.Read())
-                    {
-                        cid.Add(Map(dr));
-                    }
+                    cid.Add(Map(dr));
                 }
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 throw;
             }
+
             return cid;
         }
 
@@ -169,23 +158,21 @@ namespace WebAPI.Repository
 
             try
             {
-                using (var cmd = _conexao.GetConexao().CreateCommand())
-                {
-                    cmd.CommandText = @"UPDATE Cidades 
+                using var cmd = _conexao.GetConexao().CreateCommand();
+                cmd.CommandText = @"UPDATE Cidades 
                                         SET Nome = @Nome, Sigla = @Sigla, IBGEMunicipio = @IBGEMunicipio, Latitude = @Latitude, Longitude = @Longitude
                                         WHERE CidadeId = @id;";
 
-                    cmd.Parameters.AddWithValue("@Nome", cidade.Nome);
-                    cmd.Parameters.AddWithValue("@Sigla", cidade.Sigla);
-                    cmd.Parameters.AddWithValue("@IBGEMunicipio", cidade.IBGEMunicipio);
-                    cmd.Parameters.AddWithValue("@Latitude", cidade.Latitude);
-                    cmd.Parameters.AddWithValue("@Longitude", cidade.Longitude);
-                    cmd.Parameters.AddWithValue("@id", cidade.CidadeId);
-                    int linhasAfetadas = cmd.ExecuteNonQuery();
-                    flag = linhasAfetadas > 0;
-                }
+                cmd.Parameters.AddWithValue("@Nome", cidade.Nome);
+                cmd.Parameters.AddWithValue("@Sigla", cidade.Sigla);
+                cmd.Parameters.AddWithValue("@IBGEMunicipio", cidade.IBGEMunicipio);
+                cmd.Parameters.AddWithValue("@Latitude", cidade.Latitude);
+                cmd.Parameters.AddWithValue("@Longitude", cidade.Longitude);
+                cmd.Parameters.AddWithValue("@id", cidade.CidadeId);
+                int linhasAfetadas = cmd.ExecuteNonQuery();
+                flag = linhasAfetadas > 0;
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 throw;
             }
@@ -199,15 +186,13 @@ namespace WebAPI.Repository
 
             try
             {
-                using (var cmd = _conexao.GetConexao().CreateCommand())
-                {
-                    cmd.CommandText = "DELETE FROM Cidades WHERE CidadeId = @id";
-                    cmd.Parameters.AddWithValue("@id", id);
-                    int linhasAfetadas = cmd.ExecuteNonQuery();
-                    flag = linhasAfetadas > 0;
-                }
+                using var cmd = _conexao.GetConexao().CreateCommand();
+                cmd.CommandText = "DELETE FROM Cidades WHERE CidadeId = @id";
+                cmd.Parameters.AddWithValue("@id", id);
+                int linhasAfetadas = cmd.ExecuteNonQuery();
+                flag = linhasAfetadas > 0;
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 throw;
             }
@@ -215,31 +200,29 @@ namespace WebAPI.Repository
             return flag;
         }
 
-        public Entidades.Cidade ReadById(int id)
+        public Entidades.Cidade? ReadById(int id)
         {
-            Cidade cid = null;
+            Cidade cid;
 
             try
             {
-                using (var cmd = _conexao.GetConexao().CreateCommand())
+                using var cmd = _conexao.GetConexao().CreateCommand();
+                cmd.CommandText = "SELECT * FROM Cidades WHERE CidadeId = @id";
+                cmd.Parameters.AddWithValue("@id", id);
+
+                var dr = cmd.ExecuteReader();
+
+                if (dr.Read())
                 {
-                    cmd.CommandText = "SELECT * FROM Cidades WHERE CidadeId = @id";
-                    cmd.Parameters.AddWithValue("@id", id);
-
-                    var dr = cmd.ExecuteReader();
-
-                    if (dr.Read())
-                    {
-                        cid = Map(dr);
-                    }
+                    cid = Map(dr);
                 }
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 throw;
             }
 
-            return cid;
+            return null;
         }
 
         public int Count()
@@ -248,13 +231,11 @@ namespace WebAPI.Repository
 
             try
             {
-                using (var cmd = _conexao.GetConexao().CreateCommand())
-                {
-                    cmd.CommandText = "SELECT COUNT(*) FROM Cidades";
-                    count = Convert.ToInt32(cmd.ExecuteScalar());
-                }
+                using var cmd = _conexao.GetConexao().CreateCommand();
+                cmd.CommandText = "SELECT COUNT(*) FROM Cidades";
+                count = Convert.ToInt32(cmd.ExecuteScalar());
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 throw;
             }
@@ -271,12 +252,10 @@ namespace WebAPI.Repository
                 cmd.CommandText = "SELECT DISTINCT Sigla FROM Cidades";
 
                 // O DataReader também precisa do using para não travar o banco!
-                using (var dr = cmd.ExecuteReader())
+                using var dr = cmd.ExecuteReader();
+                while (dr.Read())
                 {
-                    while (dr.Read())
-                    {
-                        siglas.Add(dr.GetString("Sigla"));
-                    }
+                    siglas.Add(dr.GetString("Sigla"));
                 }
             }
 
@@ -292,12 +271,10 @@ namespace WebAPI.Repository
                 cmd.CommandText = "SELECT * FROM Cidades WHERE Sigla = @sigla";
                 cmd.Parameters.AddWithValue("@sigla", sigla);
 
-                using (var dr = cmd.ExecuteReader())
+                using var dr = cmd.ExecuteReader();
+                while (dr.Read())
                 {
-                    while (dr.Read())
-                    {
-                        cidades.Add(Map(dr));
-                    }
+                    cidades.Add(Map(dr));
                 }
             }
 
@@ -306,13 +283,16 @@ namespace WebAPI.Repository
 
         public Entidades.Cidade Map(MySql.Data.MySqlClient.MySqlDataReader dr)
         {
-            Cidade cid = new Cidade();
-            cid.CidadeId = dr.GetInt32("CidadeId");
-            cid.Nome = dr.GetString("Nome");
-            cid.Sigla = dr.GetString("Sigla");
-            cid.IBGEMunicipio = dr.GetInt32("IBGEMunicipio");
-            cid.Latitude = dr.IsDBNull(dr.GetOrdinal("Latitude")) ? null : dr.GetDecimal("Latitude");
-            cid.Longitude = dr.IsDBNull(dr.GetOrdinal("Longitude")) ? null : dr.GetDecimal("Longitude");
+            Cidade cid = new()
+            {
+                CidadeId = dr.GetInt32("CidadeId"),
+                Nome = dr.GetString("Nome"),
+                Sigla = dr.GetString("Sigla"),
+                IBGEMunicipio = dr.GetInt32("IBGEMunicipio"),
+                Latitude = dr.IsDBNull(dr.GetOrdinal("Latitude")) ? null : dr.GetDecimal("Latitude"),
+                Longitude = dr.IsDBNull(dr.GetOrdinal("Longitude")) ? null : dr.GetDecimal("Longitude")
+            };
+
             return cid;
         }
     }

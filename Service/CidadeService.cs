@@ -3,14 +3,9 @@ using System.Globalization;
 
 namespace WebAPI.Service
 {
-    public class CidadeService
+    public class CidadeService(Repository.CidadeRepository repo)
     {
-        private readonly Repository.CidadeRepository _cidRepository;
-
-        public CidadeService(Repository.CidadeRepository repo)
-        {
-            _cidRepository = repo;   
-        }
+        private readonly Repository.CidadeRepository _cidRepository = repo;
 
         public void SalvarCidadesEmLote(List<Entidades.Cidade> cidades)
         {
@@ -22,9 +17,10 @@ namespace WebAPI.Service
             _cidRepository.SaveAllCities2(cidades);
         }
 
-        public Entidades.Cidade MapearLinhaCSV(string linha)
+        public Entidades.Cidade? MapearLinhaCSV(string linha)
         {
-            if (string.IsNullOrWhiteSpace(linha)) return null;
+            if (string.IsNullOrWhiteSpace(linha))
+                return null;
 
             var partes = linha.Split(',');
             if (partes.Length < 5) return null;
@@ -47,42 +43,42 @@ namespace WebAPI.Service
             }
         }
 
-        public bool criarCidade(Entidades.Cidade cidade)
+        public bool CriarCidade(Entidades.Cidade cidade)
         {
             return _cidRepository.Create(cidade);
         }
 
-        public List<Entidades.Cidade> lerTodasCidades()
+        public List<Entidades.Cidade> LerTodasCidades()
         {
             return _cidRepository.Read();
         }
 
-        public Entidades.Cidade lerCidadePorId(int id)
+        public Entidades.Cidade? LerCidadePorId(int id)
         {
             return _cidRepository.ReadById(id);
         }
 
-        public int lerQuantidadeCidades()
+        public int LerQuantidadeCidades()
         {
             return _cidRepository.Count();
         }
 
-        public List<string> lerEstados()
+        public List<string> LerEstados()
         {
             return _cidRepository.ReadEstados();
         }
 
-        public List<Entidades.Cidade> lerCidadesPorEstado(string sigla)
+        public List<Entidades.Cidade> LerCidadesPorEstado(string sigla)
         {
             return _cidRepository.ReadByEstado(sigla);
         }
 
-        public bool atualizarCidade(Entidades.Cidade cidade)
+        public bool AtualizarCidade(Entidades.Cidade cidade)
         {
             return _cidRepository.Update(cidade);
         }
 
-        public bool deletarCidade(int id)
+        public bool DeletarCidade(int id)
         {
             return _cidRepository.Delete(id);
         }
