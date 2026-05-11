@@ -221,7 +221,6 @@ namespace WebAPI.Repository
 
         public IEnumerable<Entidades.Aluno> Consultar(string nome)
         {
-
             List<Entidades.Aluno> alunos = new();
             try
             {
@@ -242,13 +241,10 @@ namespace WebAPI.Repository
             }
             catch (MySqlException ex)
             {
-
-                //serilog...
                 throw;
             }
 
             return alunos;
-
         }
 
         public Entidades.Aluno Map(MySql.Data.MySqlClient.MySqlDataReader dr)

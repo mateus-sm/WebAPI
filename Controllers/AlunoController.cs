@@ -185,5 +185,29 @@ namespace WebAPI.Controllers
                 return StatusCode(500, $"Erro interno na API: {ex.Message}");
             }
         }
+
+        [HttpGet("nomes/{name}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult GetByName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return BadRequest("Nome vazio");
+
+            try
+            {
+                var alu = _alunoService.Consultar(name);
+                return Ok(alu);
+            } 
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro no Banco de dados", Erro = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
+            }
+        }
     }
 }
