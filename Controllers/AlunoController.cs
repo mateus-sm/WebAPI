@@ -300,13 +300,39 @@ namespace WebAPI.Controllers
         /// <param name="nome">O nome do aluno a ser verificado. Não pode ser nulo ou vazio.</param>
         /// <returns>Um objeto HTTP 200 contendo uma mensagem informando se o aluno existe ou não. Retorna HTTP 500 em caso de
         /// erro interno ou de banco de dados.</returns>
-        [HttpGet("existe/{nome}")]
-        public IActionResult AlunoExistente(string nome)
+        [HttpGet("existeNome/{nome}")]
+        public IActionResult AlunoExistenteNome(string nome)
         {
             try
             {
                 var flag = _alunoService.AlunoExistente(nome);
                 return Ok(new {mensagem = $"Aluno {nome} " + (flag ? "existe no banco" : "não existe no banco") });
+            }
+            catch (MySqlException ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro no Banco de dados", Erro = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Mensagem = "Erro interno na API", Erro = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Verifica se existe um aluno com o identificador especificado.
+        /// </summary>
+        /// <remarks>Retorna o status HTTP 200 com a mensagem de existência do aluno. Em caso de erro no
+        /// banco de dados ou erro interno, retorna o status HTTP 500 com detalhes do erro.</remarks>
+        /// <param name="id">O identificador único do aluno a ser verificado. Deve ser um valor inteiro positivo.</param>
+        /// <returns>Um resultado HTTP que indica se o aluno existe. Retorna um objeto JSON com uma mensagem informando se o
+        /// aluno foi encontrado.</returns>
+        [HttpGet("existenteId/{id}")]
+        public IActionResult AlunoExistenteId(int id)
+        {
+            try
+            {
+                var flag = _alunoService.AlunoExistente(id);
+                return Ok(new { mensagem = $"Aluno {id} " + (flag ? "existe no banco" : "não existe no banco") });
             }
             catch (MySqlException ex)
             {

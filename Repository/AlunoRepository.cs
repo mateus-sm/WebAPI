@@ -259,7 +259,6 @@ namespace WebAPI.Repository
             }
 
             return total;
-
         }
 
         public bool AlunoExistente(string nome)
